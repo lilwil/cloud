@@ -18,10 +18,8 @@
         }
     },
     "extra": {
-        "think":{
-            "config":{
-                "cloud": "src/config/cloud.php"
-            }
+        "think-config": {
+            "cloud": "src/config/cloud.php"
         }
     }
 }
