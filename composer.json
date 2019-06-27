@@ -3,6 +3,7 @@
     "description": "cloud",
     "homepage": "https://github.com/lilwil/cloud",
     "license": "Apache-2.0",
+    "type": "think-extend",
     "authors": [
         {
             "name": "lilwil",
