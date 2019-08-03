@@ -10,10 +10,10 @@
 
     use think\facade\Config;
 
-    class AppStoreDownload
+    class Download
     {
         //错误信息
-        private $error = '出现未知错误 AppStoreDownload ！';
+        private $error = '出现未知错误 Download ！';
 
         /**
          * 存储文件.

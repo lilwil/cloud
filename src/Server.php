@@ -15,7 +15,7 @@
     use think\Exception;
     use think\Container;
 
-    class AppStoreServer
+    class Server
     {
         // 需要发送的数据
         private $data = [];
