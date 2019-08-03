@@ -30,7 +30,7 @@
          */
         protected $request;
         // 服务器地址
-        private $server_domain = 'http://appstore.yicmf.com/v1/';
+        private $server_domain = 'http://cloud.yicmf.com/v1/';
 
         public function __construct()
         {
