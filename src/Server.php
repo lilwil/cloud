@@ -14,6 +14,7 @@
     use think\facade\Cache;
     use think\Exception;
     use think\Container;
+    use yicmf\Http;
 
     class Server
     {
