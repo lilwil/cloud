@@ -87,7 +87,7 @@
             $key = $this->getTokenKey();
             if ( !Cache::has($key) ) {
                 $token = $this->action('foreign.token');
-                if ( 0 === $token['code'] ) {
+                if (isset($token['code']) &&  0 === $token['code'] ) {
                     Cache::set($key, $token['token']);
                 } else {
                     Cache::set($key, 0);
