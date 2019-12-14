@@ -7,8 +7,14 @@
     // | Author: 微尘 <yicmf@qq.com>
     // +----------------------------------------------------------------------
     return [
+        // 开启云服务
+        'open' => true,
+        // 云服务域名
+        'domain' => 'http://cloud.yicmf.com/v1/',
         // 账户
         'account' => '',
         // 密码
         'password' => '',
+        // 使用项目
+        'project' => '',
     ];

@@ -23,7 +23,7 @@
         private $action;
         private $token;
         private $app;
-        private $open_cloud = true;
+        private $open = true;
 
         /**
          * Request实例
@@ -31,11 +31,13 @@
          */
         protected $request;
         // 服务器地址
-        private $server_domain = 'http://cloud.yicmf.com/v1/';
+        private $domain = 'http://cloud.yicmf.com/v1/';
 
         public function __construct()
         {
             $this->app = Container::get('app');
+            $this->open = Config::get('cloud.open');
+            $this->domain = Config::get('cloud.domain');
             $this->request = $this->app['request'];
             // 用户获取token
             $this->competence();
@@ -64,7 +66,7 @@
          */
         public function action($action)
         {
-            if ( $this->open_cloud ) {
+            if ( $this->open ) {
                 if ( empty($this->data) ) {
                     $data = null;
                 } else {
@@ -111,7 +113,7 @@
                 'token' => $this->token
             ];
             try {
-                $result = Http::post($this->server_domain . $this->action, $params);
+                $result = Http::post($this->domain . $this->action, $params);
                 if ( !isset($result['content']) ) {
                     throw new Exception($result['message'], $result['code']);
                 }
@@ -155,6 +157,7 @@
                 'domain' => $this->request->domain(),
                 'lang' => $this->request->langset()
             ];
+
             return base64_encode(json_encode($dentity));
         }
     }
