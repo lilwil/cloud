@@ -1,5 +1,4 @@
 <?php
-
     // +----------------------------------------------------------------------
     // | 在线云服务
     // +----------------------------------------------------------------------
@@ -7,7 +6,6 @@
     // +----------------------------------------------------------------------
     // | Author: 微尘 <yicmf@qq.com>
     // +----------------------------------------------------------------------
-
     namespace yicmf\cloud;
 
     use think\facade\Config;
@@ -23,7 +21,10 @@
         private $action;
         private $token;
         private $app;
-        private $open = true;
+        private $open_cloud = true;
+        private $project = 'yicmf';
+        private $account = '';
+        private $password = '';
 
         /**
          * Request实例
@@ -31,14 +32,34 @@
          */
         protected $request;
         // 服务器地址
-        private $domain = 'http://cloud.yicmf.com/v1/';
+        private $server_domain = 'http://cloud.yicmf.com/v1/';
 
         public function __construct()
         {
             $this->app = Container::get('app');
-            $this->open = Config::get('cloud.open');
-            $this->domain = Config::get('cloud.domain');
             $this->request = $this->app['request'];
+            $this->project = Config::get('cloud.project');
+            $this->account = Config::get('cloud.account');
+            $this->password = Config::get('cloud.password');
+            if ($this->open_cloud) {
+                if (!Cache::has('open_cloud')) {
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_HEADER, 1);
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+                    curl_setopt($ch, CURLOPT_URL, $this->server_domain);
+                    curl_exec($ch);
+                    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                    Cache::set('open_cloud', $httpcode, 60);
+                } else {
+                    $httpcode = Cache::get('open_cloud');
+                }
+                if (200 != $httpcode) {
+                    $this->open_cloud = false;
+                }
+            }
             // 用户获取token
             $this->competence();
         }
@@ -53,7 +74,6 @@
         public function data($data)
         {
             $this->data = $data;
-
             return $this;
         }
 
@@ -66,8 +86,8 @@
          */
         public function action($action)
         {
-            if ( $this->open ) {
-                if ( empty($this->data) ) {
+            if ($this->open_cloud) {
+                if (empty($this->data)) {
                     $data = null;
                 } else {
                     $data = $this->data;
@@ -77,7 +97,7 @@
                 $this->action = str_replace('.', '/', $action);;
                 return $this->run($data);
             } else {
-                return ['code' => 1, '未开启云服务'];
+                return ['code' => 1, 'message' => '未开启云服务'];
             }
         }
 
@@ -87,9 +107,9 @@
         private function competence()
         {
             $key = $this->getTokenKey();
-            if ( !Cache::has($key) ) {
+            if (!Cache::has($key)) {
                 $token = $this->action('foreign.token');
-                if (isset($token['code']) &&  0 === $token['code'] ) {
+                if (isset($token['code']) && 0 === $token['code']) {
                     Cache::set($key, $token['token']);
                 } else {
                     Cache::set($key, 0);
@@ -113,12 +133,12 @@
                 'token' => $this->token
             ];
             try {
-                $result = Http::post($this->domain . $this->action, $params);
-                if ( !isset($result['content']) ) {
+                $result = Http::post($this->server_domain . $this->action, $params);
+                if (!isset($result['content'])) {
                     throw new Exception($result['message'], $result['code']);
                 }
                 $result = $result['content'];
-            } catch ( Exception $e ) {
+            } catch (Exception $e) {
                 $result['code'] = $e->getCode();
                 $result['message'] = $e->getMessage();
             }
@@ -146,18 +166,18 @@
         private function getIdentity()
         {
             $dentity = [
-                'version' => Config::get('yiget.version'),
-                'edition' => Config::get('yiget.edition'),
-                'build' => Config::get('yiget.build'),
-                'account' => Config::get('setting.appstore_account'),
+                'version' => Config::get($this->project . '.version'),
+                'edition' => Config::get($this->project . '.edition'),
+                'build' => Config::get($this->project . '.build'),
+                'account' => $this->account,
+                'password' => $this->password,
+                'project' => $this->project,
                 'data_auth_key' => Config::get('ucenter.data_auth_key'),
                 'web_uuid' => Config::get('ucenter.web_uuid'),
-                'password' => Config::get('setting.appstore_password'),
                 'ip' => $this->request->ip(),
                 'domain' => $this->request->domain(),
                 'lang' => $this->request->langset()
             ];
-
             return base64_encode(json_encode($dentity));
         }
     }
