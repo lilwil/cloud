@@ -51,11 +51,11 @@
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                     curl_setopt($ch, CURLOPT_HEADER, 1);
                     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-                    curl_setopt($ch, CURLOPT_URL, $this->server_domain . 'index/index');
+                    curl_setopt($ch, CURLOPT_URL, $this->server_domain . 'foreign/connect');
                     curl_exec($ch);
                     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
-                    Cache::set('open_cloud', $httpcode, 60);
+                    Cache::set('open_cloud', $httpcode, 3600*24);
                 } else {
                     $httpcode = Cache::get('open_cloud');
                 }
