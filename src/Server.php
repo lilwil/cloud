@@ -41,8 +41,7 @@
             $this->project = Config::get('cloud.project');
             $this->account = Config::get('cloud.account');
             $this->password = Config::get('cloud.password');
-            if (Config::get('cloud.domain'))
-            {
+            if (Config::get('cloud.domain')) {
                 $this->server_domain = Config::get('cloud.domain');
             }
             if ($this->open_cloud) {
@@ -52,7 +51,7 @@
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                     curl_setopt($ch, CURLOPT_HEADER, 1);
                     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-                    curl_setopt($ch, CURLOPT_URL, $this->server_domain.'index/index');
+                    curl_setopt($ch, CURLOPT_URL, $this->server_domain . 'index/index');
                     curl_exec($ch);
                     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
@@ -169,14 +168,19 @@
          */
         private function getIdentity()
         {
+            if ('cli' != PHP_SAPI) {
+                $domain = Config::get($this->project . '.domain');
+            } else {
+                $domain = $this->request->domain();
+            }
             $dentity = [
                 'version' => Config::get($this->project . '.version'),
                 'edition' => Config::get($this->project . '.edition'),
                 'build' => Config::get($this->project . '.build'),
-                'domain' => Config::get($this->project . '.domain'),
                 'data_auth_key' => Config::get('ucenter.data_auth_key'),
                 'web_uuid' => Config::get('ucenter.web_uuid'),
                 'lang' => Config::get('app.default_lang'),
+                'domain' => $domain,
                 'account' => $this->account,
                 'password' => $this->password,
                 'project' => $this->project,
