@@ -23,8 +23,7 @@
         private $app;
         private $open_cloud = true;
         private $project = 'yicmf';
-        private $account = '';
-        private $password = '';
+        
 
         /**
          * Request实例
@@ -38,9 +37,7 @@
         {
             $this->app = Container::get('app');
             $this->request = $this->app['request'];
-            $this->project = Config::get('cloud.project');
-            $this->account = Config::get('cloud.account');
-            $this->password = Config::get('cloud.password');
+            $this->project = Config::get('cloud.project'); 
             if (Config::get('cloud.domain')) {
                 $this->server_domain = Config::get('cloud.domain');
             }
@@ -181,8 +178,8 @@
                 'web_uuid' => Config::get('ucenter.web_uuid'),
                 'lang' => Config::get('app.default_lang'),
                 'domain' => $domain,
-                'account' => $this->account,
-                'password' => $this->password,
+                'account' => Config::get('cloud.account'),
+                'password' => Config::get('cloud.password'),
                 'project' => $this->project,
             ];
             return base64_encode(json_encode($dentity));
