@@ -165,7 +165,7 @@
          */
         private function getIdentity()
         {
-            if ('cli' != PHP_SAPI) {
+            if ('cli' == PHP_SAPI) {
                 $domain = Config::get($this->project . '.domain');
             } else {
                 $domain = $this->request->domain();
