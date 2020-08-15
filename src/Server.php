@@ -23,7 +23,7 @@
         private $app;
         private $open_cloud = true;
         private $project = 'yicmf';
-        
+
 
         /**
          * Request实例
@@ -37,7 +37,7 @@
         {
             $this->app = Container::get('app');
             $this->request = $this->app['request'];
-            $this->project = Config::get('cloud.project'); 
+            $this->project = Config::get('cloud.project');
             if (Config::get('cloud.domain')) {
                 $this->server_domain = Config::get('cloud.domain');
             }
@@ -133,7 +133,11 @@
                 'token' => $this->token
             ];
             try {
-                $result = Http::post($this->server_domain . $this->action, $params);
+                $headers = [
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                    'cloud-token' => 'yicmf',
+                ];
+                $result = Http::request($this->server_domain . $this->action, $params,'POST',$headers);
                 if (!isset($result['content'])) {
                     throw new Exception($result['message'], $result['code']);
                 }
