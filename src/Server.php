@@ -60,8 +60,6 @@
 					$this->open_cloud = false;
 				}
 			}
-			// 用户获取token
-			$this->competence();
 		}
 
 		/**
@@ -101,41 +99,24 @@
 			}
 		}
 
-		/**
-		 * 用户获取token.
-		 */
-		private function competence()
-		{
-			$key = $this->getTokenKey();
-			if (!Cache::has($key)) {
-				$token = $this->action('foreign.token');
-				if (isset($token['code']) && 0 === $token['code']) {
-					Cache::set($key, $token['token']);
-				} else {
-					Cache::set($key, 0);
-				}
-			}
-			$this->token = Cache::get($key);
-		}
 
 		/**
 		 * 请求
 		 * @param array $param
 		 * @return array
-		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/1/25 18:11
 		 */
 		private function run($param = [])
 		{
 			$params = [
 				'data' => base64_encode(json_encode($param)),
 				'identity' => $this->getIdentity(),
-				'token' => $this->token
+				'signType' => 'base64',
+				'format' => 'json',
 			];
 			try {
 				$headers = [
 					'Content-Type' => 'application/x-www-form-urlencoded',
-					'cloud-token' => 'yicmf',
+					'cloud-token' => think_encrypt(md5($params['data'] . $params['identity']), 'yicmf'),
 				];
 				$result = Http::request($this->server_domain . $this->action, $params, 'POST', $headers);
 				if (!isset($result['content'])) {
@@ -149,19 +130,6 @@
 			return $result;
 		}
 
-		/**
-		 * 获取token Key 每一个小时更新一次
-		 * @return string
-		 */
-		public function getTokenKey()
-		{
-			return md5(date('Y-m-d H') . 'appstore_token');
-		}
-
-		public function clearToken()
-		{
-			return Cache::rm(md5(date('Y-m-d H') . 'appstore_token'));
-		}
 
 		/**
 		 * 会员帐号信息.
@@ -170,21 +138,24 @@
 		private function getIdentity()
 		{
 			if ('cli' == PHP_SAPI) {
-				$domain = Config::get($this->project . '.domain');
+				$host = Config::get($this->project . '.host');
+				$ip = '';
 			} else {
-				$domain = $this->request->domain();
+				$host = $this->request->host(true);
+				$ip = $this->request->ip();
 			}
 			$dentity = [
 				'version' => Config::get($this->project . '.version'),
 				'edition' => Config::get($this->project . '.edition'),
 				'build' => Config::get($this->project . '.build'),
-				'data_auth_key' => Config::get('ucenter.data_auth_key'),
 				'web_uuid' => Config::get('ucenter.web_uuid'),
 				'lang' => Config::get('app.default_lang'),
-				'domain' => $domain,
+				'host' => $host,
+				'sapi' => PHP_SAPI,
 				'account' => Config::get('cloud.account'),
 				'password' => Config::get('cloud.password'),
 				'project' => $this->project,
+				'ip' => $ip
 			];
 			return base64_encode(json_encode($dentity));
 		}
