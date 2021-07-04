@@ -1,4 +1,5 @@
 <?php
+
 	// +----------------------------------------------------------------------
 	// | 在线云服务
 	// +----------------------------------------------------------------------
@@ -6,6 +7,7 @@
 	// +----------------------------------------------------------------------
 	// | Author: 微尘 <yicmf@qq.com>
 	// +----------------------------------------------------------------------
+
 	namespace yicmf\cloud;
 
 	use think\facade\Config;
@@ -152,8 +154,8 @@
 				'lang' => Config::get('app.default_lang'),
 				'host' => $host,
 				'sapi' => PHP_SAPI,
-				'account' => Config::get('cloud.account'),
-				'password' => Config::get('cloud.password'),
+				'app_id' => Config::get('cloud.app_id'),
+				'app_key' => Config::get('cloud.app_key'),
 				'project' => $this->project,
 				'ip' => $ip
 			];
