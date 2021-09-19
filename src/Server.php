@@ -23,34 +23,38 @@
 		private $action;
 		private $token;
 		private $app;
-		private $open_cloud = true;
-		private $project = 'yicmf';
-
-
 		/**
 		 * Request实例
 		 * @var \think\Request
 		 */
 		protected $request;
-		// 服务器地址
-		private $server_domain = 'http://cloud.yicmf.com/v1/';
+		private $config = [
+			// open
+			'open' => true,
+			// appid
+			'app_id' => '',
+			// 密钥
+			'app_key' => '',
+			// 使用项目
+			'project' => 'yicmf',
+			// 默认域名
+			'domain' => 'https://cloud.yicmf.com/api/cloud/',
+		];
 
 		public function __construct()
 		{
 			$this->app = Container::get('app');
 			$this->request = $this->app['request'];
-			$this->project = Config::get('cloud.project');
-			if (Config::get('cloud.domain')) {
-				$this->server_domain = Config::get('cloud.domain');
-			}
-			if ($this->open_cloud) {
+			$this->config = array_merge($this->config,Config::get('cloud'));
+
+			if ($this->config['open']) {
 				if (!Cache::has('open_cloud')) {
 					$ch = curl_init();
 					curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 					curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 					curl_setopt($ch, CURLOPT_HEADER, 1);
 					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-					curl_setopt($ch, CURLOPT_URL, $this->server_domain . 'foreign/connect');
+					curl_setopt($ch, CURLOPT_URL, $this->config['domain'] . 'foreign/connect');
 					curl_exec($ch);
 					$httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 					curl_close($ch);
@@ -59,7 +63,7 @@
 					$httpcode = Cache::get('open_cloud');
 				}
 				if (200 != $httpcode) {
-					$this->open_cloud = false;
+					$this->config['open'] = false;
 				}
 			}
 		}
@@ -86,7 +90,7 @@
 		 */
 		public function action($action)
 		{
-			if ($this->open_cloud) {
+			if ($this->config['open']) {
 				if (empty($this->data)) {
 					$data = null;
 				} else {
@@ -120,7 +124,7 @@
 					'Content-Type' => 'application/x-www-form-urlencoded',
 					'cloud-token' => think_encrypt(md5($params['data'] . $params['identity']), 'yicmf'),
 				];
-				$result = Http::request($this->server_domain . $this->action, $params, 'POST', $headers);
+				$result = Http::request($this->config['domain'] . $this->action, $params, 'POST', $headers);
 				if (!isset($result['content'])) {
 					throw new Exception($result['message'], $result['code']);
 				}
@@ -140,23 +144,23 @@
 		private function getIdentity()
 		{
 			if ('cli' == PHP_SAPI) {
-				$host = Config::get($this->project . '.host');
+				$host = Config::get($this->config['project'] . '.host');
 				$ip = '';
 			} else {
 				$host = $this->request->host(true);
 				$ip = $this->request->ip();
 			}
 			$dentity = [
-				'version' => Config::get($this->project . '.version'),
-				'edition' => Config::get($this->project . '.edition'),
-				'build' => Config::get($this->project . '.build'),
+				'version' => Config::get($this->config['project'] . '.version'),
+				'edition' => Config::get($this->config['project'] . '.edition'),
+				'build' => Config::get($this->config['project'] . '.build'),
 				'web_uuid' => Config::get('ucenter.web_uuid'),
 				'lang' => Config::get('app.default_lang'),
 				'host' => $host,
 				'sapi' => PHP_SAPI,
-				'app_id' => Config::get('cloud.app_id'),
-				'app_key' => Config::get('cloud.app_key'),
-				'project' => $this->project,
+				'app_id' => $this->config['app_id'],
+				'app_key' => $this->config['app_key'],
+				'project' => $this->config['project'],
 				'ip' => $ip
 			];
 			return base64_encode(json_encode($dentity));

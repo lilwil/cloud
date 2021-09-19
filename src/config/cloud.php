@@ -9,10 +9,14 @@
 	// +----------------------------------------------------------------------
 
 	return [
+		// open
+		'open' => true,
 		// appid
 		'app_id' => '',
 		// 密钥
 		'app_key' => '',
 		// 使用项目
 		'project' => 'yicmf',
+		// 默认域名
+		'domain' => 'https://cloud.yicmf.com/api/',
 	];
