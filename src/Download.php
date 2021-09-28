@@ -10,13 +10,21 @@
 
 	namespace yicmf\cloud;
 
-	use think\facade\Config;
+	use think\Container;
+	use think\facade\Cache; 
+	use think\Exception;
+	use think\facade\Lang;
 
 	class Download
 	{
 		//错误信息
 		private $error = '出现未知错误 Download ！';
 
+
+		public function __construct()
+		{ 
+			Lang::load(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $this->request->langset() . '.php');
+		}
 		/**
 		 * 存储文件.
 		 * @param string $packageUrl 文件请求地址
@@ -29,14 +37,14 @@
 				//检查链接可用
 				$array = get_headers($packageUrl, 1);
 				if (!preg_match('/200/', $array[0])) {
-					throw new \Exception('当前下载文件已经失效！' . $packageUrl);
+					throw new Exception(Lang::get('cloud download is error!') . $packageUrl);
 				}
 				$tmpdir = $this->getTempFile($packageUrl, $type);
 				if (!file_exists($tmpdir)) {
 					//发生错误
 					if (mkdir($tmpdir, 0777, true) === false) {
 						//错误信息
-						throw new \Exception("创建临时缓存目录{$tmpdir}失败！");
+						throw new Exception(Lang::get('cloud create dir error!',['dir'=>$tmpdir]));
 					}
 				}
 				//本地文件名
@@ -49,12 +57,12 @@
 					//下载文件包
 					$package = $this->download($packageUrl, $locale);
 					if ($package === false) {
-						throw new \Exception($this->error ?: '下载远程文件失败！');
+						throw new Exception($this->error ?: Lang::get('cloud download is fail!'));
 					}
 				}
 				$data['code'] = 0;
-				$data['message'] = '文件下载完毕！';
-			} catch (\Exception $e) {
+				$data['message'] = Lang::get('cloud download is finish!');
+			} catch (Exception $e) {
 				$data['code'] = 1;
 				$data['message'] = $e->getMessage();
 			}
@@ -76,7 +84,7 @@
 				$zip = new \ZipArchive;
 				$res = $zip->open($package);
 				if ($res !== true) {
-					throw new \Exception('无法正常解压文件！' . $res);
+					throw new Exception(Lang::get('cloud decompression error!') . $res);
 				}
 				//解压到临时目录
 				$zip->extractTo($newdir);
@@ -84,8 +92,8 @@
 				// 删除压缩包
 				$delete_package && unlink($package);
 				$data['code'] = 0;
-				$data['message'] = '解压完成移动完毕！';
-			} catch (\Exception $e) {
+				$data['message'] = Lang::get('cloud decompression and move success!');
+			} catch (Exception $e) {
 				$data['code'] = 1;
 				$data['message'] = $e->getMessage();
 			}
@@ -113,7 +121,7 @@
 				//删除文件包
 				$list = $this->rglob($tmpdir, GLOB_BRACE);
 				if (empty($list)) {
-					throw new \Exception('移动文件到指定目录错误，原因：文件列表为空！');
+					throw new Exception('移动文件到指定目录错误，原因：文件列表为空！');
 				}
 				//权限检查
 				$this->competence($tmpdir, $newdir);
@@ -123,33 +131,33 @@
 					//目录
 					$dirname = dirname($newd);
 					if (file_exists($dirname) == false && mkdir($dirname, 0777, true) == false) {
-						throw new \Exception("创建文件夹{$dirname}失败！");
+						throw new Exception("创建文件夹{$dirname}失败！");
 					}
 					//检查缓存包中的文件如果文件或者文件夹存在，但是不可写提示错误
 					if (file_exists($file) && is_writable($file) == false) {
-						throw new \Exception("文件或者目录{$file}，不可写！");
+						throw new Exception("文件或者目录{$file}，不可写！");
 					}
 					//检查目标文件是否存在，如果文件或者文件夹存在，但是不可写提示错误
 					if (file_exists($newd) && is_writable($newd) == false) {
-						throw new \Exception("文件或者目录{$newd}，不可写！");
+						throw new Exception("文件或者目录{$newd}，不可写！");
 					}
 					//检查缓存包对应的文件是否文件夹，如果是，则创建文件夹
 					if (is_dir($file)) {
 						//文件夹不存在则创建
 						if (file_exists($newd) == false && mkdir($newd, 0777, true) == false) {
-							throw new \Exception("创建文件夹{$newd}失败！");
+							throw new Exception("创建文件夹{$newd}失败！");
 						}
 					} else {
 						//========文件处理！=============
 						if (file_exists($newd)) {
 							//删除旧文件（winodws 环境需要）
 							if (!unlink($newd)) {
-								throw new \Exception("无法删除{$newd}文件！");
+								throw new Exception("无法删除{$newd}文件！");
 							}
 						}
 						//生成新文件，也就是把下载的，生成到新的路径中去
 						if (!rename($file, $newd)) {
-							throw new \Exception("无法生成{$newd}文件！");
+							throw new Exception("无法生成{$newd}文件！");
 						}
 					}
 				}
@@ -158,7 +166,7 @@
 				$dir->delDir($tmpdir);
 				$data['code'] = 0;
 				$data['message'] = '应用移动完毕！';
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				$data['code'] = 1;
 				$data['message'] = $e->getMessage();
 			}
@@ -183,27 +191,27 @@
 				//目录
 				$dirname = dirname($newd);
 				if (file_exists($dirname) == false && mkdir($dirname, 0777, true) == false) {
-					throw new \Exception("创建文件夹{$dirname}失败！");
+					throw new Exception("创建文件夹{$dirname}失败！");
 				}
 				//检查缓存包中的文件如果文件或者文件夹存在，但是不可写提示错误
 				if (file_exists($file) && is_writable($file) == false) {
-					throw new \Exception("文件或者目录{$file}，不可写！");
+					throw new Exception("文件或者目录{$file}，不可写！");
 				}
 				//检查目标文件是否存在，如果文件或者文件夹存在，但是不可写提示错误
 				if (file_exists($newd) && is_writable($newd) == false) {
-					throw new \Exception("文件或者目录{$newd}，不可写！");
+					throw new Exception("文件或者目录{$newd}，不可写！");
 				}
 				//检查缓存包对应的文件是否文件夹，如果是，则创建文件夹
 				if (is_dir($file)) {
 					//文件夹不存在则创建
 					if (file_exists($newd) == false && mkdir($newd, 0777, true) == false) {
-						throw new \Exception("创建文件夹{$newd}失败！");
+						throw new Exception("创建文件夹{$newd}失败！");
 					}
 				} else {
 					//========文件处理！=============
 					if (file_exists($newd)) {
 						if (!is_writable($newd)) {
-							throw new \Exception("文件 {$newd} 不可写！");
+							throw new Exception("文件 {$newd} 不可写！");
 						}
 					}
 				}
@@ -294,7 +302,7 @@
 		public function download($url, $file = '', $timeout = 60)
 		{
 			if (empty($url)) {
-				throw new \Exception('下载地址为空！');
+				throw new Exception('下载地址为空！');
 			}
 			//提取文件名
 			$filename = pathinfo($url, PATHINFO_BASENAME);
@@ -321,16 +329,16 @@
 				$temp = curl_exec($ch);
 				if (!curl_error($ch)) {
 					if (empty($temp)) {
-						throw new \Exception('下载失败，下载的文件为空！');
+						throw new Exception('下载失败，下载的文件为空！');
 					}
 					if (file_put_contents($file, $temp)) {
 						return $file;
 					} else {
-						throw new \Exception("保存文件失败！文件:{$file}");
+						throw new Exception("保存文件失败！文件:{$file}");
 					}
 				} else {
 					$error = curl_error($ch);
-					throw new \Exception('Curl 下载出现错误！' . $error);
+					throw new Exception('Curl 下载出现错误！' . $error);
 				}
 			} else {
 				//PHP 5.3 兼容
@@ -350,7 +358,7 @@
 				if ($res) {
 					return $file;
 				}
-				throw new \Exception('使用 copy 下载文件失败，请检查防火墙，或者网络不稳定请稍后！');
+				throw new Exception('使用 copy 下载文件失败，请检查防火墙，或者网络不稳定请稍后！');
 			}
 		}
 	}

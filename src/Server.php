@@ -14,6 +14,7 @@
 	use think\facade\Cache;
 	use think\Exception;
 	use think\Container;
+	use think\facade\Lang;
 	use yicmf\Http;
 
 	class Server
@@ -45,8 +46,9 @@
 		{
 			$this->app = Container::get('app');
 			$this->request = $this->app['request'];
-			$this->config = array_merge($this->config,Config::get('cloud'));
-
+			$this->config = array_merge($this->config,Config::get('cloud.')); 
+			Lang::load(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $this->request->langset() . '.php');
+ 
 			if ($this->config['open']) {
 				if (!Cache::has('open_cloud')) {
 					$ch = curl_init();
@@ -101,7 +103,7 @@
 				$this->action = str_replace('.', '/', $action);;
 				return $this->run($data);
 			} else {
-				return ['code' => 1, 'message' => '未开启云服务'];
+				return ['code' => 1, 'message' => Lang::get('cloud is close!')];
 			}
 		}
 
@@ -155,7 +157,7 @@
 				'edition' => Config::get($this->config['project'] . '.edition'),
 				'build' => Config::get($this->config['project'] . '.build'),
 				'web_uuid' => Config::get('ucenter.web_uuid'),
-				'lang' => Config::get('app.default_lang'),
+				'lang' => $this->request->langset(),
 				'host' => $host,
 				'sapi' => PHP_SAPI,
 				'app_id' => $this->config['app_id'],
