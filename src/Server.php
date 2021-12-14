@@ -39,16 +39,16 @@
 			// 使用项目
 			'project' => 'yicmf',
 			// 默认域名
-			'domain' => 'https://cloud.yicmf.com/api/cloud/',
+			'domain' => 'https://cloud.yicmf.com/api/',
 		];
 
 		public function __construct()
 		{
 			$this->app = Container::get('app');
 			$this->request = $this->app['request'];
-			$this->config = array_merge($this->config,Config::get('cloud.')); 
+			$this->config = array_merge($this->config,Config::get('cloud.'));
 			Lang::load(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $this->request->langset() . '.php');
- 
+
 			if ($this->config['open']) {
 				if (!Cache::has('open_cloud')) {
 					$ch = curl_init();
